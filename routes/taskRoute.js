@@ -29,9 +29,11 @@ router.post("/", checkToken, async (req, res) => {
 
 //Read- Leitura de dados
 
-router.get("/", async (req, res) => {
+router.get("/", checkToken, async (req, res) => {
+	const userId = req.userid;
+
 	try {
-		const tasks = await Task.find();
+		const tasks = await Task.find({ userId });
 		res.status(200).json(tasks);
 	} catch (error) {
 		console.log(error);
@@ -43,26 +45,31 @@ router.get("/", async (req, res) => {
 });
 
 //Update -atualização de dados (PUT, PATCH)
-router.patch('/', async (req, res) => {
+router.patch("/:id", checkToken, async (req, res) => {
 	const userId = req.userid;
 
-	const { name, status = true, deleted = false } = req.body
+	const { name, status = true, deleted = false } = req.body;
 
-	const task = { name, status, deleted, userId };
+	const task = {status, deleted };
+
+	const existingTask = await Task.findOne({_id:req.params.id});
+	console.log(existingTask)
+
+	if (existingTask.userId !== userId || !existingTask) {
+		return res.status(403).json({ msg: "Acesso negado!" });
+	}
 
 	try {
-		
-		const updatedTask = await Task.updateOne(userId, task)
+		const updatedTask = await Task.updateOne({_id:req.params.id}, task);
 
-		res.status(200).json(task)
-
+		res.status(200).json(task);
 	} catch (error) {
 		console.log(error);
 
 		res.status(500).json({
 			msg: "Aconteceu um erro no servidor, tente novamente mais tarde",
+		});
 	}
-)}
-})
+});
 
 module.exports = router;
