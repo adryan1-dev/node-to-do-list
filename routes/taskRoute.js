@@ -48,21 +48,46 @@ router.get("/", checkToken, async (req, res) => {
 router.patch("/:id", checkToken, async (req, res) => {
 	const userId = req.userid;
 
-	const { name, status = true, deleted = false } = req.body;
+	const { status = true, deleted = false } = req.body;
 
-	const task = {status, deleted };
+	const task = { status, deleted };
 
-	const existingTask = await Task.findOne({_id:req.params.id});
-	console.log(existingTask)
+	const existingTask = await Task.findOne({ _id: req.params.id });
+	console.log(existingTask);
 
 	if (existingTask.userId !== userId || !existingTask) {
 		return res.status(403).json({ msg: "Acesso negado!" });
 	}
 
 	try {
-		const updatedTask = await Task.updateOne({_id:req.params.id}, task);
+		const updatedTask = await Task.updateOne({ _id: req.params.id }, task);
 
 		res.status(200).json(task);
+	} catch (error) {
+		console.log(error);
+
+		res.status(500).json({
+			msg: "Aconteceu um erro no servidor, tente novamente mais tarde",
+		});
+	}
+});
+
+//DELETE - remoção de dados
+router.delete("/:id", checkToken, async (req, res) => {
+	const userId = req.userid;
+	const { status = true, deleted = false } = req.body;
+
+	const task = { status, deleted };
+
+	const deletedTask = await Task.findOne({ _id: req.params.id });
+	
+
+	if (!deletedTask) {
+		res.status(422).json({ message: "Tarefa não encontrada!" });
+	}
+
+	try {
+		await Task.deleteOne({ _id: req.params.id });
 	} catch (error) {
 		console.log(error);
 
