@@ -55,7 +55,7 @@ router.patch("/:id", checkToken, async (req, res) => {
 	const existingTask = await Task.findOne({ _id: req.params.id });
 	console.log(existingTask);
 
-	if (existingTask.userId !== userId || !existingTask) {
+	if (!existingTask || existingTask.userId !== userId) {
 		return res.status(403).json({ msg: "Acesso negado!" });
 	}
 
